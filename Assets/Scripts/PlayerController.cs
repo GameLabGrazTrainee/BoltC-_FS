@@ -19,14 +19,17 @@ public class PlayerController : MonoBehaviour
     [Header("Death Event")]
     public UnityEvent deathEvent;
     private Animator _animator;
+    private Rigidbody2D _rigidbody;
  
     private SpriteRenderer spriteRenderer;
 
-
+    public ProjectilePlayer ProjectilePrefab;
+    public Transform LaunchOffset;
     
     public int playerHealth = 3;
     public bool HasKey = false;
-    private bool facingRight = true;/*
+    public bool HasBlitz = false;
+    public bool facingRight = true;/*
     private int coinCount = 0;
     private int jumpCount = 0;
 
@@ -39,18 +42,29 @@ public class PlayerController : MonoBehaviour
         //jumpCount = extraJumps;#
         _animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        _rigidbody = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
         var moveInput = Input.GetAxis("Horizontal");
+        transform.position += new Vector3(moveInput, 0, 0) * speed * Time.deltaTime;
         //Debug.Log(moveInput);
 
         var rb = GetComponent<Rigidbody2D>();
-        rb.velocity = new Vector2(moveInput * speed, rb.velocity.y);
+        //rb.velocity = new Vector2(moveInput * speed, rb.velocity.y);
+
+        //if(!Mathf.Approximately(0, moveInput))
+          //  transform.rotation = moveInput > 0 ? Quaternion.Euler(0, 180, 0) : Quaternion.identity;
+
+        /*if(Input.GetButtonDown("Jump") && Mathf.Abs(_rigidbody.velocity.y) < 0.001f)
+        {
+            _rigidbody.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
+        }*/
 
         // play run animation
+        
         if(moveInput != 0)
             _animator.SetFloat("Speed", speed);
         else
@@ -67,6 +81,13 @@ public class PlayerController : MonoBehaviour
             Flip();
         }
 
+        if(Input.GetButtonDown("Fire1"))
+        {
+            if(HasBlitz)
+            {
+                Instantiate(ProjectilePrefab, LaunchOffset.position, transform.rotation);
+            } 
+        }
 
         /* if (IsGrounded)
           {
@@ -75,6 +96,7 @@ public class PlayerController : MonoBehaviour
 
 
         // player jump
+        
         var jump = Input.GetButtonDown("Jump");
         if (jump && IsGrounded)
         {
@@ -113,7 +135,12 @@ public class PlayerController : MonoBehaviour
         else if (other.tag == "Key")
         {
             HasKey = true;
-            //Destroy(this, 1);
+            other.gameObject.SetActive(false);
+            Debug.Log("gone");
+        }
+        else if (other.tag == "Blitz")
+        {
+            HasBlitz = true;
             other.gameObject.SetActive(false);
             Debug.Log("gone");
         }

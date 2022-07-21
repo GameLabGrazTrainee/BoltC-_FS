@@ -7,6 +7,7 @@ public class Enemy : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
     private Animator _animator;
+    private Rigidbody2D rb;
 
     [SerializeField] private float speed = 1;
 
@@ -21,6 +22,7 @@ public class Enemy : MonoBehaviour
     private int direction = 1;
     private bool facingRight = true;
     private int timer = 0;
+    private bool destroyed = false;
 
     private bool IsGrounded => Physics2D.OverlapCircle(groundCheck.position, checkRadius, whatIsGround);
     private bool IsVeryGrounded => Physics2D.OverlapCircle(groundCheck.position, checkBigRadius, whatIsGround);
@@ -29,12 +31,13 @@ public class Enemy : MonoBehaviour
     private void Start()
     {
         _animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        var rb = GetComponent<Rigidbody2D>();
+        if(destroyed) return;
         rb.velocity = new Vector2(direction * speed, rb.velocity.y);
         _animator.SetFloat("Speed", speed);
 
@@ -71,7 +74,7 @@ public class Enemy : MonoBehaviour
         }
         else speed = 2;
         timer++;
-        if(timer >= 5)
+        if(timer >= 10)
         {
             checkBigRadius = 1;
         }
@@ -84,5 +87,18 @@ public class Enemy : MonoBehaviour
         scale.x *= -1; // scale.x = scale.x * -1;
         direction *= -1;
         transform.localScale = scale;
+    }
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.tag == "Projectile")
+        {
+            destroyed = true;
+            rb.velocity = Vector2.zero;
+            var collider = GetComponent<BoxCollider2D>();
+            collider.enabled = false;
+            _animator.SetFloat("Speed", 0);
+            Destroy(gameObject, 3);
+            //gameObject.SetActive(false);
+        }
     }
 }
